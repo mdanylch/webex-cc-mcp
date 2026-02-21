@@ -1,5 +1,5 @@
-# AWS App Runner config: must be in the Source directory (e.g. server/)
-# See: https://docs.aws.amazon.com/apprunner/latest/dg/config-file-ref.html
+# AWS App Runner config. Source directory must be: server
+# https://docs.aws.amazon.com/apprunner/latest/dg/config-file-ref.html
 version: 1.0
 runtime: python311
 build:
@@ -9,7 +9,7 @@ build:
       - pip3 install -r requirements.txt
 run:
   runtime-version: "3.11"
-  command: sh -c "echo 'Container run starting'; python3 run.py"
+  command: python3 -m uvicorn main:app --host 0.0.0.0 --port 8080
   network:
     port: 8080
   env:

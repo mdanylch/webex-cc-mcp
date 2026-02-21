@@ -1,0 +1,5 @@
+# Ensure these are never committed (backup to root .gitignore)
+.venv/
+venv/
+__pycache__/
+.env
