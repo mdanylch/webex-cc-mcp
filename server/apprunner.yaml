@@ -9,6 +9,9 @@ build:
       - pip3 install -r requirements.txt
 run:
   runtime-version: "3.11"
-  command: python3 run.py
+  command: sh -c "echo 'Container run starting'; python3 run.py"
   network:
     port: 8080
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
