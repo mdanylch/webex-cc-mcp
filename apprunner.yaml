@@ -1,0 +1,14 @@
+# Use this when App Runner Source directory is repo ROOT (/).
+# Build and run the Python app in server/
+version: 1.0
+runtime: python311
+build:
+  commands:
+    build:
+      - pip3 install --upgrade pip
+      - pip3 install -r server/requirements.txt
+run:
+  runtime-version: "3.11"
+  command: cd server && python3 -m uvicorn main:app --host 0.0.0.0 --port 8080
+  network:
+    port: 8080

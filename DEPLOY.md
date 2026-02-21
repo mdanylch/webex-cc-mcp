@@ -63,7 +63,9 @@ App Runner builds your app from GitHub and runs it on a public URL. Every push t
    - **Repository type:** Source code repository.
    - **Connect to GitHub** (authorize AWS if needed).
    - Select your **repository** and **branch** (e.g. `main`).
-   - **Source directory:** Set to **`server`** so App Runner uses the folder that contains `apprunner.yaml`, `main.py`, and `requirements.txt`.
+   - **Source directory:** Either:
+     - **`/`** (repo root): App Runner uses the **root** `apprunner.yaml`, which builds from `server/requirements.txt` and runs `cd server && uvicorn ...`.
+     - **`server`**: App Runner uses the **server** folder and `server/apprunner.yaml` (build/run from `server/`).
    - **Deployment trigger:** Automatic (deploy on push), or Manual if you prefer.
 
 3. **Configure build:**
