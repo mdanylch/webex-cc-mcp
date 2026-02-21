@@ -292,6 +292,12 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root():
+    """Root path for App Runner default health check (GET /)."""
+    return {"status": "ok", "service": "webex-contact-center-mcp"}
+
+
 @app.get("/health")
 def health():
     return {

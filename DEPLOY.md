@@ -104,6 +104,12 @@ If your App Runner flow does not offer “Use a configuration file”, choose **
 
 You must still set **Source directory** to **`server`** in the source step so the build runs from the folder that contains `main.py` and `requirements.txt`.
 
+### 2.5 If the build or deployment fails
+
+- **Logs:** In the App Runner console, open your service → **Logs** tab. Check **Application logs** and **Deployment logs** (or **Build logs**). In AWS CloudWatch, find the log group for your App Runner service (e.g. `/aws/apprunner/...`) to see detailed build and run output.
+- **Health check:** The app now responds with `200` on **GET /** so App Runner’s default health check (path `/`) succeeds. You can also set a custom health check in the service configuration: **Service** → **Configure** → **Health check** → Path = `/health` if you prefer.
+- **Build:** The config uses `pip3` and `python3 -m uvicorn` for compatibility with App Runner’s Python image. If `pip install` fails, check the build logs for the failing package and pin its version in `requirements.txt` if needed.
+
 ---
 
 ## Part 3 (Optional): Host the frontend on AWS
