@@ -63,12 +63,13 @@ App Runner builds your app from GitHub and runs it on a public URL. Every push t
    - **Repository type:** Source code repository.
    - **Connect to GitHub** (authorize AWS if needed).
    - Select your **repository** and **branch** (e.g. `main`).
+   - **Source directory:** Set to **`server`** so App Runner uses the folder that contains `apprunner.yaml`, `main.py`, and `requirements.txt`.
    - **Deployment trigger:** Automatic (deploy on push), or Manual if you prefer.
 
 3. **Configure build:**
-   - **Build type:** Docker.
-   - **Dockerfile:** Use the one in the repo. If App Runner asks for a path, use **Dockerfile** (the root Dockerfile that builds the server). If it asks for a **Root directory**, leave it empty (repo root).
-   - **Port:** `8080` (the Dockerfile exposes 8080).
+   - **Configuration file:** Choose **Use a configuration file**. App Runner will read **`apprunner.yaml`** from the source directory (`server/`). The repo has `server/apprunner.yaml` with runtime `python311`, build `pip install -r requirements.txt`, and run `uvicorn main:app --host 0.0.0.0 --port 8080`.
+   - **Runtime:** Filled from the config file (Python 3.11). If the console still asks for Runtime, select **Python 3**.
+   - **Port:** **8080** (must match the port in `apprunner.yaml`).
 
 4. **Configure service:**
    - **Service name:** e.g. `webex-cc-mcp`.
@@ -92,14 +93,16 @@ In your **frontend** (Chat tab), set:
 
 If the frontend is still local (e.g. `http://localhost:5173`), the backend’s CORS (currently allow all) will allow requests. For production, you’d host the frontend (e.g. S3 + CloudFront) and optionally restrict CORS to that origin.
 
-### 2.4 If App Runner wants a “source directory”
+### 2.4 If “Use a configuration file” is not available
 
-Some flows let you set a **Root directory** or **Source directory**. If you must point to a subfolder:
+If your App Runner flow does not offer “Use a configuration file”, choose **Configure all settings here** and set:
 
-- Set **Root directory** to `server`.
-- Use the **server/Dockerfile** (the one inside `server/`) so the build context is `server/`. In that case the root `Dockerfile` is not used by App Runner.
+- **Runtime:** Python 3 (or Python 3.11 if listed).
+- **Build command:** `pip install -r requirements.txt` (or leave default if it detects requirements.txt).
+- **Start command:** `uvicorn main:app --host 0.0.0.0 --port 8080`
+- **Port:** `8080`
 
-The **root Dockerfile** in this repo is written so that when the build context is the **repo root**, it copies `server/` into the image and runs the app. If your App Runner only supports building from a subdirectory, use **Root directory** = `server` and rely on **server/Dockerfile** only.
+You must still set **Source directory** to **`server`** in the source step so the build runs from the folder that contains `main.py` and `requirements.txt`.
 
 ---
 
@@ -121,6 +124,6 @@ To serve the React app from AWS:
 | Git init        | Project root |
 | Don’t commit    | `.env`, `node_modules/`, `server/.venv/` |
 | Push            | GitHub repo (main branch) |
-| App Runner      | Source = GitHub repo, Build = Docker, Port = 8080 |
+| App Runner      | Source directory = `server`, Use config file (apprunner.yaml), Port = 8080 |
 | Secrets         | Prefer Secrets Manager; add env vars in App Runner config |
 | After deploy    | Use App Runner URL as API base and MCP URL in the frontend |
