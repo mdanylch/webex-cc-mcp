@@ -7,11 +7,15 @@ Env: Load from server/.env. CONTACT_CENTER_ACCESS_TOKEN, optional CONTACT_CENTER
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv(Path(__file__).resolve().parent / ".env")
+import os
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+except Exception:
+    pass  # .env optional (e.g. in App Runner env vars are set in console)
 
 import json
-import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
