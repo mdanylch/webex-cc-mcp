@@ -1,3 +1,6 @@
+# App Runner config. Source directory = server.
+# Secrets: create the secret in AWS Secrets Manager, then set value-from to its ARN.
+# Grant the App Runner instance role permission to read the secret (see NEXT_STEPS.md).
 version: 1.0
 runtime: python311
 build:
@@ -12,3 +15,10 @@ run:
   command: python3 -m uvicorn main:app --host 0.0.0.0 --port 8080
   network:
     port: 8080
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+  # Uncomment and set value-from to your secret ARN so Chat has an LLM key. Create the secret in Secrets Manager first.
+  # secrets:
+  #   - name: CLAUDE_API_KEY
+  #     value-from: "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:YOUR_SECRET_NAME-xxxxxx"
