@@ -19,8 +19,13 @@ import json
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from lib.api import get_base_url, get_access_token, get_org_id, cc_rest
+
+# Optional: serve Chat UI from server/static (built with npm run build + copy to server/static)
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+_SERVE_UI = (_STATIC_DIR / "index.html").exists()
 
 # MCP tool definitions
 TOOLS = [
@@ -296,12 +301,6 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-def root():
-    """Root path for App Runner default health check (GET /)."""
-    return {"status": "ok", "service": "webex-contact-center-mcp"}
-
-
 @app.get("/health")
 def health():
     return {
@@ -375,6 +374,15 @@ async def api_chat(request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+# Serve Chat UI at / when server/static is populated (see NEXT_STEPS.md). Use /health for health checks.
+if _SERVE_UI:
+    app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="static")
+else:
+    @app.get("/")
+    def root():
+        return {"status": "ok", "service": "webex-contact-center-mcp"}
 
 
 if __name__ == "__main__":

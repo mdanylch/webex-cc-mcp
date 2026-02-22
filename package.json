@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "npx vite",
     "build": "vite build",
+    "build:server": "vite build && node build-static.js",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -10,6 +10,15 @@ const MCP_MODES = ['http', 'stdio']
 const DEFAULT_CC_SERVER_NAME = 'webex-contact-center'
 const DEFAULT_CC_MCP_URL = 'http://localhost:3100/mcp'
 
+// When the app is served from the same host as the API (e.g. App Runner), use current origin
+function getDefaultChatApiBase() {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return window.location.origin
+  return 'http://localhost:3100'
+}
+function getDefaultChatMcpUrl() {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return window.location.origin + '/mcp'
+  return 'http://localhost:3100/mcp'
+}
 const DEFAULT_CHAT_API_BASE = 'http://localhost:3100'
 const DEFAULT_CHAT_MCP_URL = 'http://localhost:3100/mcp'
 
@@ -91,8 +100,8 @@ function App() {
   const [ccMcpUrl, setCcMcpUrl] = useState(DEFAULT_CC_MCP_URL)
   const [ccCopied, setCcCopied] = useState(false)
 
-  const [chatApiBase, setChatApiBase] = useState(DEFAULT_CHAT_API_BASE)
-  const [chatMcpUrl, setChatMcpUrl] = useState(DEFAULT_CHAT_MCP_URL)
+  const [chatApiBase, setChatApiBase] = useState(getDefaultChatApiBase)
+  const [chatMcpUrl, setChatMcpUrl] = useState(getDefaultChatMcpUrl)
   const [chatOrgId, setChatOrgId] = useState('')
   const [chatAccessToken, setChatAccessToken] = useState('')
   const [chatMessages, setChatMessages] = useState([])
@@ -410,7 +419,7 @@ function App() {
           <section className="panel chat-panel">
             <h2>Chat (MCP client)</h2>
             <p className="intro">
-              Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Ensure the server is running (<code>node index.js --http</code> in <code>server/</code>) and <code>OPENAI_API_KEY</code> is set on the server.
+              Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Use <strong>Chat API base URL</strong> and <strong>MCP server URL</strong> below to point to a local server or a deployed one (e.g. App Runner). The server must have <code>CLAUDE_API_KEY</code> or <code>OPENAI_API_KEY</code> set.
             </p>
             <div className="chat-auth">
               <div className="field-group">
