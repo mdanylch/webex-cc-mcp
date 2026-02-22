@@ -5,7 +5,8 @@ build:
   commands:
     build:
       - chmod +x run_server.sh
-      - pip3 install -r server/requirements.txt
+      - python3 -m pip install --upgrade pip
+      - python3 -m pip install -r server/requirements.txt
 run:
   runtime-version: "3.11"
   command: sh run_server.sh
