@@ -9,6 +9,8 @@ build:
       - python3 -m pip install -r server/requirements.txt
 run:
   runtime-version: "3.11"
+  pre-run:
+    - pip3 install -r server/requirements.txt
   command: sh run_server.sh
   network:
     port: 8080
