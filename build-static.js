@@ -3,8 +3,11 @@
  * Copy Vite build output (dist/) to server/static for serving the Chat UI from the Python backend.
  * Run after: npm run build
  */
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const src = path.join(__dirname, 'dist');
 const dest = path.join(__dirname, 'server', 'static');
