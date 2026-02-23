@@ -163,47 +163,72 @@ function App() {
       {activeTab === 'contact-center' && (
         <div className="layout">
           <section className="panel config-panel">
-            <h2>How third parties can configure and use this MCP</h2>
+            <h2>How to use this MCP</h2>
             <p className="intro">
-              This server exposes{' '}
-              <a href="https://developer.webex.com/webex-contact-center/docs/webex-contact-center" target="_blank" rel="noopener noreferrer">
-                Webex Contact Center APIs
-              </a>
-              {' '}as MCP tools. Third parties can connect <strong>Cursor</strong>, <strong>Claude Desktop</strong>, or any MCP client, or use <strong>Chat (MCP Client)</strong> on this page with their own Org ID and token.
+              This server is hosted on AWS. The AI (Claude) is already configured — you only need your <strong>Webex Contact Center Organization ID</strong> and <strong>Access token</strong>. Follow the steps below.
             </p>
 
-            <h3>1. What you need</h3>
+            <h3>What you need</h3>
             <ul className="doc-list">
-              <li><strong>MCP endpoint URL</strong> — This server’s URL plus <code>/mcp</code> (e.g. <code>https://your-domain.awsapprunner.com/mcp</code>). When opened from this site, the field below defaults to the current origin.</li>
-              <li><strong>Server name</strong> — Optional; the key used in your MCP client config (e.g. <code>webex-contact-center</code>).</li>
+              <li><strong>Organization ID</strong> — Your Webex Contact Center organization ID (e.g. from the Webex CC Developer Portal).</li>
+              <li><strong>Access token</strong> — A Webex Contact Center API access token for that organization.</li>
             </ul>
 
-            <h3>2. Sending Organization ID and token</h3>
-            <p><strong>Option A — Chat on this page</strong></p>
-            <ul className="doc-list">
-              <li>Use <strong>Chat (MCP Client)</strong>. Enter your <strong>Organization ID</strong> and <strong>Access token</strong> in the form.</li>
-              <li>Each message is sent to <code>POST /api/chat</code> with JSON body: <code>{'{"prompt":"...","accessToken":"...","orgId":"..."}'}</code>. The server uses <code>accessToken</code> and <code>orgId</code> for Webex Contact Center API calls. Tokens are not stored.</li>
-            </ul>
-            <p><strong>Option B — Direct MCP (e.g. Cursor, Claude Desktop)</strong></p>
-            <ul className="doc-list">
-              <li>Add this server to your client config (paste the <strong>Generated config</strong> from the right panel). The config only contains the MCP URL; it does not include credentials.</li>
-              <li>To pass <strong>Org ID and token per request</strong>, include them in the MCP <code>tools/call</code> arguments. The server accepts two reserved keys in <code>arguments</code>:
-                <ul>
-                  <li><code>__accessToken</code> — Webex Contact Center API access token (string)</li>
-                  <li><code>__orgId</code> — Organization ID (string)</li>
-                </ul>
-                Example JSON-RPC request body for <code>tools/call</code>: <code>{'{"method":"tools/call","params":{"name":"cc_list_address_books","arguments":{"__accessToken":"YOUR_TOKEN","__orgId":"YOUR_ORG_ID"}}}'}</code>. The server strips these from the tool arguments and uses them for authentication.
-              </li>
-              <li>Alternatively, the server can use a single token/org set by the administrator in the environment (<code>CONTACT_CENTER_ACCESS_TOKEN</code>, <code>CONTACT_CENTER_ORG_ID</code>). Then clients do not need to send <code>__accessToken</code> or <code>__orgId</code> in each call.</li>
-            </ul>
-
-            <h3>3. Steps to add to your MCP client</h3>
+            <h3>Step 1: Choose how you want to use the MCP</h3>
+            <p><strong>Option A — Chat on this website (easiest)</strong></p>
             <ol className="doc-list">
-              <li>Set <strong>MCP endpoint URL</strong> below to this server’s URL (e.g. <code>https://your-app.awsapprunner.com/mcp</code>).</li>
-              <li>Optionally change the <strong>Server name</strong>.</li>
-              <li>Click <strong>Copy JSON</strong> and paste into your MCP client configuration (e.g. Cursor → Settings → MCP → config JSON).</li>
-              <li>Save and restart the client. When calling tools, pass <code>__accessToken</code> and <code>__orgId</code> in the request arguments if the server does not use env-based credentials.</li>
+              <li>Open the <strong>Chat (MCP Client)</strong> tab.</li>
+              <li>Enter your <strong>Organization ID</strong> and <strong>Access token</strong> in the form.</li>
+              <li>Type your prompt and click Send. The server uses your token and org ID for every request; you don’t configure anything else.</li>
             </ol>
+
+            <p><strong>Option B — Use an MCP client (Cursor, Claude Desktop, etc.)</strong></p>
+            <ol className="doc-list">
+              <li>Add this MCP server to your client config (see Step 2 below).</li>
+              <li>When calling tools, you must send your <strong>Org ID</strong> and <strong>token</strong> in every request (see Step 3).</li>
+            </ol>
+
+            <h3>Step 2: Add the server to your MCP client (Option B only)</h3>
+            <ol className="doc-list">
+              <li>The MCP endpoint URL is: <code>https://ipcykaiq4a.us-east-1.awsapprunner.com/mcp</code> (this site’s URL + <code>/mcp</code>).</li>
+              <li>In the right panel below, the <strong>MCP endpoint URL</strong> field is pre-filled when you open this page from the deployed site. You can change the <strong>Server name</strong> if you like.</li>
+              <li>Click <strong>Copy JSON</strong> and paste the result into your MCP client configuration (e.g. Cursor → Settings → MCP → edit config JSON).</li>
+              <li>Save and restart your client.</li>
+            </ol>
+
+            <h3>Step 3: How to send Org ID and token in requests</h3>
+            <p><strong>If you use Chat on this website (Option A)</strong></p>
+            <ul className="doc-list">
+              <li>You enter Org ID and Access token in the Chat form. Each time you send a message, the browser sends a request to <code>POST /api/chat</code> with a JSON body that includes <code>orgId</code> and <code>accessToken</code>. The server uses them for Webex Contact Center API calls. Nothing else is required.</li>
+            </ul>
+
+            <p><strong>If you use an MCP client and call tools directly (Option B)</strong></p>
+            <ul className="doc-list">
+              <li>Every <code>tools/call</code> request must include your credentials in the <code>arguments</code> object. The server accepts two reserved keys:
+                <ul>
+                  <li><code>__orgId</code> — Your Webex Contact Center organization ID (string).</li>
+                  <li><code>__accessToken</code> — Your Webex Contact Center API access token (string).</li>
+                </ul>
+                The server removes these from the arguments and uses them for authentication; they are not passed to the tool itself.
+              </li>
+              <li><strong>Example request body</strong> (JSON-RPC <code>tools/call</code>):
+              </li>
+            </ul>
+            <pre className="code-block doc-example-request">
+{`{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "cc_list_address_books",
+    "arguments": {
+      "__orgId": "YOUR_ORG_ID",
+      "__accessToken": "YOUR_ACCESS_TOKEN"
+    }
+  }
+}`}
+            </pre>
+            <p className="hint">Replace <code>YOUR_ORG_ID</code> and <code>YOUR_ACCESS_TOKEN</code> with your actual values. For other tools (e.g. <code>cc_end_task</code>), add the tool’s parameters in <code>arguments</code> along with <code>__orgId</code> and <code>__accessToken</code>.</p>
 
             <div className="field-group">
               <label htmlFor="ccServerName">Server name (config key)</label>
@@ -224,16 +249,16 @@ function App() {
                 type="url"
                 value={ccMcpUrl}
                 onChange={(e) => setCcMcpUrl(e.target.value)}
-                placeholder="e.g. https://your-app.awsapprunner.com/mcp"
+                placeholder="https://ipcykaiq4a.us-east-1.awsapprunner.com/mcp"
                 className="input"
               />
-              <span className="hint">This server’s URL + <code>/mcp</code>. When opened from the deployed site, it defaults to the current origin.</span>
+              <span className="hint">This server’s URL + <code>/mcp</code>. Pre-filled when you open this page from the deployed site.</span>
             </div>
           </section>
 
           <section className="panel output-panel">
             <h2>Generated config</h2>
-            <p className="hint">Paste this into your MCP client config file. The server handles authentication via its environment (or use the Chat tab for your own token).</p>
+            <p className="hint">Paste this into your MCP client config (e.g. Cursor). You still need to send <code>__orgId</code> and <code>__accessToken</code> in each tool call — see Step 3 above.</p>
             <pre className="code-block">
               <code>{JSON.stringify(ccConfig, null, 2)}</code>
             </pre>
