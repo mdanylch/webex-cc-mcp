@@ -1,5 +1,9 @@
 # Push to GitHub & Test Locally
 
+**Local testing and public deployment are independent.** Testing on your machine does not change or disable the deployed app. Deploying to App Runner does not affect your ability to run and test locally. You can always test changes locally first, then push to GitHub when ready; App Runner will deploy from the branch you configured.
+
+---
+
 ## Push changes to GitHub
 
 ### If this folder is not yet a Git repo
@@ -92,6 +96,19 @@ CLAUDE_API_KEY=your_claude_key
 ```
 
 Then restart the server.
+
+---
+
+## Local vs deployed — both work
+
+| Where you open the app | What happens |
+|------------------------|--------------|
+| **Local:** http://localhost:8080 | The app uses `http://localhost:8080` for API and MCP. Your changes run only on your machine. |
+| **Deployed:** https://your-app.awsapprunner.com | The app uses that URL for API and MCP. Anyone with the link can use it. |
+
+- **Test locally first:** run `npm run build:server`, then start the server in `server/` on port 8080. Open http://localhost:8080. No push required.
+- **Deploy when ready:** push to GitHub; App Runner builds and deploys. The public URL keeps working.
+- **Neither disables the other.** You can switch between local and deployed anytime.
 
 ---
 

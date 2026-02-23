@@ -2,23 +2,26 @@ import { useState, useCallback } from 'react'
 import './App.css'
 
 const DEFAULT_CC_SERVER_NAME = 'webex-contact-center'
-const DEFAULT_CC_MCP_URL = 'http://localhost:3100/mcp'
+// Default MCP URL: use current page origin so it works both locally (e.g. :8080) and when deployed
+function getDefaultCcMcpUrl() {
+  if (typeof window !== 'undefined') return window.location.origin + '/mcp'
+  return 'http://localhost:8080/mcp'
+}
 
 function getDefaultChatApiBase() {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return window.location.origin
-  return 'http://localhost:3100'
+  if (typeof window !== 'undefined') return window.location.origin
+  return 'http://localhost:8080'
 }
 function getDefaultChatMcpUrl() {
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return window.location.origin + '/mcp'
-  return 'http://localhost:3100/mcp'
+  if (typeof window !== 'undefined') return window.location.origin + '/mcp'
+  return 'http://localhost:8080/mcp'
 }
-const DEFAULT_CHAT_API_BASE = 'http://localhost:3100'
-const DEFAULT_CHAT_MCP_URL = 'http://localhost:3100/mcp'
+const DEFAULT_CHAT_API_BASE = 'http://localhost:8080'
+const DEFAULT_CHAT_MCP_URL = 'http://localhost:8080/mcp'
 
 const TABS = [
+  { id: 'chat', label: 'Chat (MCP Client)' },
   { id: 'contact-center', label: 'Webex Contact Center MCP' },
-  { id: 'chat', label: 'Chat' },
-  { id: 'docs', label: 'Documentation' },
 ]
 
 const MCP_TOOLS_DOCS = [
@@ -47,7 +50,7 @@ function buildCcMcpConfig(serverName, mcpUrl) {
   return {
     mcpServers: {
       [name]: {
-        url: mcpUrl || DEFAULT_CC_MCP_URL,
+        url: mcpUrl || (typeof window !== 'undefined' ? window.location.origin + '/mcp' : DEFAULT_CHAT_MCP_URL),
       },
     },
   }
@@ -55,8 +58,9 @@ function buildCcMcpConfig(serverName, mcpUrl) {
 
 function App() {
   const [activeTab, setActiveTab] = useState('chat')
+  const [docsModalOpen, setDocsModalOpen] = useState(false)
   const [ccServerName, setCcServerName] = useState(DEFAULT_CC_SERVER_NAME)
-  const [ccMcpUrl, setCcMcpUrl] = useState(DEFAULT_CC_MCP_URL)
+  const [ccMcpUrl, setCcMcpUrl] = useState(getDefaultCcMcpUrl)
   const [ccCopied, setCcCopied] = useState(false)
 
   const [chatApiBase, setChatApiBase] = useState(getDefaultChatApiBase)
@@ -129,15 +133,12 @@ function App() {
       <header className="header">
         <div className="header-left">
           <h1>Webex Contact Center MCP</h1>
-          <p className="subtitle">
-            Connect MCP clients to Webex Contact Center and use tools from the Chat. Paste the generated JSON into your client config or chat with your Org ID and token.
-          </p>
         </div>
         <div className="header-right">
           <button
             type="button"
             className="doc-link-btn"
-            onClick={() => setActiveTab('docs')}
+            onClick={() => setDocsModalOpen(true)}
           >
             Documentation
           </button>
@@ -168,7 +169,7 @@ function App() {
               <a href="https://developer.webex.com/webex-contact-center/docs/webex-contact-center" target="_blank" rel="noopener noreferrer">
                 Webex Contact Center APIs
               </a>
-              {' '}as MCP tools. Third parties can connect <strong>Cursor</strong>, <strong>Claude Desktop</strong>, or any MCP client, or use the <strong>Chat</strong> tab on this page with their own Org ID and token.
+              {' '}as MCP tools. Third parties can connect <strong>Cursor</strong>, <strong>Claude Desktop</strong>, or any MCP client, or use <strong>Chat (MCP Client)</strong> on this page with their own Org ID and token.
             </p>
 
             <h3>1. What you need</h3>
@@ -180,7 +181,7 @@ function App() {
             <h3>2. Sending Organization ID and token</h3>
             <p><strong>Option A — Chat on this page</strong></p>
             <ul className="doc-list">
-              <li>Use the <strong>Chat</strong> tab. Enter your <strong>Organization ID</strong> and <strong>Access token</strong> in the form.</li>
+              <li>Use <strong>Chat (MCP Client)</strong>. Enter your <strong>Organization ID</strong> and <strong>Access token</strong> in the form.</li>
               <li>Each message is sent to <code>POST /api/chat</code> with JSON body: <code>{'{"prompt":"...","accessToken":"...","orgId":"..."}'}</code>. The server uses <code>accessToken</code> and <code>orgId</code> for Webex Contact Center API calls. Tokens are not stored.</li>
             </ul>
             <p><strong>Option B — Direct MCP (e.g. Cursor, Claude Desktop)</strong></p>
@@ -223,7 +224,7 @@ function App() {
                 type="url"
                 value={ccMcpUrl}
                 onChange={(e) => setCcMcpUrl(e.target.value)}
-                placeholder={DEFAULT_CC_MCP_URL}
+                placeholder="e.g. https://your-app.awsapprunner.com/mcp"
                 className="input"
               />
               <span className="hint">This server’s URL + <code>/mcp</code>. When opened from the deployed site, it defaults to the current origin.</span>
@@ -248,35 +249,39 @@ function App() {
         </div>
       )}
 
-      {activeTab === 'docs' && (
-        <div className="layout">
-          <section className="panel config-panel" style={{ maxWidth: '100%' }}>
-            <h2>Documentation — MCP tools and how to use them from Chat</h2>
-            <p className="intro">
-              This server exposes the following MCP tools. Use the <strong>Chat</strong> tab (with your Org ID and Access token) or an MCP client configured with this server. Below: what each tool does and <strong>how to use it from the Chat</strong>.
-            </p>
-            {MCP_TOOLS_DOCS.map((tool) => (
-              <div key={tool.name} className="doc-tool-block">
-                <h3><code>{tool.name}</code></h3>
-                <p>{tool.description}</p>
-                <p><strong>How to use from Chat:</strong></p>
-                <p>{tool.howToUseFromChat}</p>
-                <p><strong>Example prompts:</strong></p>
-                <ul>
-                  {tool.examplePrompts.map((prompt, i) => (
-                    <li key={i}><code>{prompt}</code></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </section>
+      {docsModalOpen && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="docs-modal-title">
+          <div className="modal-content docs-modal">
+            <div className="modal-header">
+              <h2 id="docs-modal-title">Documentation — MCP tools</h2>
+              <button type="button" className="modal-close" onClick={() => setDocsModalOpen(false)} aria-label="Close">×</button>
+            </div>
+            <div className="modal-body">
+              <p className="intro">
+                Use <strong>Chat (MCP Client)</strong> with your Org ID and Access token, or an MCP client configured with this server.
+              </p>
+              {MCP_TOOLS_DOCS.map((tool) => (
+                <div key={tool.name} className="doc-tool-block">
+                  <h3><code>{tool.name}</code></h3>
+                  <p className="doc-tool-examples"><strong>Example prompts:</strong></p>
+                  <ul className="doc-tool-examples-list">
+                    {tool.examplePrompts.map((prompt, i) => (
+                      <li key={i}><code>{prompt}</code></li>
+                    ))}
+                  </ul>
+                  <p className="doc-tool-desc">{tool.description}</p>
+                  <p className="doc-tool-how"><strong>How to use from Chat:</strong> {tool.howToUseFromChat}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === 'chat' && (
         <div className="chat-layout">
           <section className="panel chat-panel">
-            <h2>Chat (MCP client)</h2>
+            <h2>Chat (MCP Client)</h2>
             <p className="intro">
               Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Use <strong>Chat API base URL</strong> and <strong>MCP server URL</strong> below to point to a local server or a deployed one (e.g. App Runner). The server must have <code>CLAUDE_API_KEY</code> or <code>OPENAI_API_KEY</code> set in its environment (e.g. App Runner) so everyone can use the Chat; keys are never stored in code.
             </p>
@@ -385,7 +390,6 @@ function App() {
           <a href="https://developer.webex.com/webex-contact-center/docs/webex-contact-center" target="_blank" rel="noopener noreferrer">
             API docs
           </a>
-          . Tokens are not stored; they exist only in the page and in the copied config.
         </p>
       </footer>
     </div>

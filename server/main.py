@@ -311,6 +311,12 @@ def health():
     }
 
 
+# Chrome DevTools requests this; return 204 to avoid 404 log noise
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+def chrome_devtools():
+    return Response(status_code=204)
+
+
 @app.get("/mcp")
 def mcp_get():
     return JSONResponse(
