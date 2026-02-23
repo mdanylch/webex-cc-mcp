@@ -13,16 +13,20 @@ git commit -m "Webex Contact Center MCP UI updates"
 
 ### Add your GitHub repo as remote (first time only)
 
-Replace `YOUR_USERNAME` and `YOUR_REPO` with your GitHub username and repository name:
-
 ```powershell
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git remote add origin https://github.com/mdanylch/webex-cc-mcp.git
 ```
 
 Or with SSH:
 
 ```powershell
-git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO.git
+git remote add origin git@github.com:mdanylch/webex-cc-mcp.git
+```
+
+**If you get "remote origin already exists"**, update the URL instead:
+
+```powershell
+git remote set-url origin https://github.com/mdanylch/webex-cc-mcp.git
 ```
 
 ### Push your branch
