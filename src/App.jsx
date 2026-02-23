@@ -182,7 +182,7 @@ function App() {
               <li>Type your prompt and click Send. The server uses your token and org ID for every request; you don’t configure anything else.</li>
             </ol>
 
-            <p><strong>Option B — Use an MCP client (Cursor, Claude Desktop, etc.)</strong></p>
+            <p><strong>Option B — Use an MCP client</strong></p>
             <ol className="doc-list">
               <li>Add this MCP server to your client config (see Step 2 below).</li>
               <li>When calling tools, you must send your <strong>Org ID</strong> and <strong>token</strong> in every request (see Step 3).</li>
@@ -192,7 +192,7 @@ function App() {
             <ol className="doc-list">
               <li>The MCP endpoint URL is: <code>https://ipcykaiq4a.us-east-1.awsapprunner.com/mcp</code> (this site’s URL + <code>/mcp</code>).</li>
               <li>In the right panel below, the <strong>MCP endpoint URL</strong> field is pre-filled when you open this page from the deployed site. You can change the <strong>Server name</strong> if you like.</li>
-              <li>Click <strong>Copy JSON</strong> and paste the result into your MCP client configuration (e.g. Cursor → Settings → MCP → edit config JSON).</li>
+              <li>Click <strong>Copy JSON</strong> and paste the result into your MCP client configuration (e.g. your client’s MCP or settings panel).</li>
               <li>Save and restart your client.</li>
             </ol>
 
@@ -258,7 +258,7 @@ function App() {
 
           <section className="panel output-panel">
             <h2>Generated config</h2>
-            <p className="hint">Paste this into your MCP client config (e.g. Cursor). You still need to send <code>__orgId</code> and <code>__accessToken</code> in each tool call — see Step 3 above.</p>
+            <p className="hint">Paste this into your MCP client config. You still need to send <code>__orgId</code> and <code>__accessToken</code> in each tool call — see Step 3 above.</p>
             <pre className="code-block">
               <code>{JSON.stringify(ccConfig, null, 2)}</code>
             </pre>
@@ -308,7 +308,7 @@ function App() {
           <section className="panel chat-panel">
             <h2>Chat (MCP Client)</h2>
             <p className="intro">
-              Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Use <strong>Chat API base URL</strong> and <strong>MCP server URL</strong> below to point to a local server or a deployed one (e.g. App Runner). The server must have <code>CLAUDE_API_KEY</code> or <code>OPENAI_API_KEY</code> set in its environment (e.g. App Runner) so everyone can use the Chat; keys are never stored in code.
+              Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Use <strong>Chat API base URL</strong> and <strong>MCP server URL</strong> below to point to a local server or a deployed one (e.g. App Runner). The server must have <code>CLAUDE_API_KEY</code> or <code>OPENAI_API_KEY</code> set in its environment (e.g. App Runner).
             </p>
             <div className="chat-auth">
               <div className="field-group">
