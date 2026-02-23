@@ -13,6 +13,35 @@
   background: #fff;
   border-bottom: 1px solid #e5e5e7;
   flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-right {
+  flex-shrink: 0;
+}
+
+.doc-link-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0d9488;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.doc-link-btn:hover {
+  background: #ccfbf1;
+  border-color: #5eead4;
 }
 
 .header h1 {
@@ -113,6 +142,67 @@
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.panel h3 {
+  margin: 1.25rem 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.panel h3:first-child {
+  margin-top: 0;
+}
+
+.doc-list {
+  margin: 0.5rem 0 1rem 0;
+  padding-left: 1.25rem;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.doc-list li {
+  margin-bottom: 0.35rem;
+}
+
+.doc-list code {
+  font-size: 0.85em;
+  background: #f3f4f6;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.doc-tool-block {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e5e7;
+}
+
+.doc-tool-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.doc-tool-block h3 {
+  margin-top: 0;
+}
+
+.doc-tool-block ul {
+  margin: 0.25rem 0 0 0;
+  padding-left: 1.25rem;
+}
+
+.doc-tool-block li {
+  margin-bottom: 0.25rem;
+}
+
+.doc-tool-block code {
+  font-size: 0.85em;
+  background: #f3f4f6;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
 }
 
 /* Form */

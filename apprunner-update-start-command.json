@@ -1,0 +1,25 @@
+{
+  "ServiceArn": "PASTE_YOUR_SERVICE_ARN_HERE",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "ConnectionArn": "PASTE_YOUR_CONNECTION_ARN_HERE"
+    },
+    "CodeRepository": {
+      "RepositoryUrl": "https://github.com/mdanylch/webex-cc-mcp",
+      "SourceCodeVersion": {
+        "Type": "BRANCH",
+        "Value": "main"
+      },
+      "SourceDirectory": "server",
+      "CodeConfiguration": {
+        "ConfigurationSource": "API",
+        "CodeConfigurationValues": {
+          "Runtime": "PYTHON_311",
+          "BuildCommand": "pip3 install -r requirements.txt",
+          "StartCommand": "sh start.sh",
+          "Port": "8080"
+        }
+      }
+    }
+  }
+}

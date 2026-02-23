@@ -1,16 +1,9 @@
 import { useState, useCallback } from 'react'
 import './App.css'
 
-const DEFAULT_SERVER_NAME = 'webex-messaging'
-const DEFAULT_MCP_URL = 'http://localhost:3001/mcp'
-const DEFAULT_PORT = '3001'
-const DEFAULT_API_BASE = 'https://webexapis.com/v1'
-const MCP_MODES = ['http', 'stdio']
-
 const DEFAULT_CC_SERVER_NAME = 'webex-contact-center'
 const DEFAULT_CC_MCP_URL = 'http://localhost:3100/mcp'
 
-// When the app is served from the same host as the API (e.g. App Runner), use current origin
 function getDefaultChatApiBase() {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return window.location.origin
   return 'http://localhost:3100'
@@ -23,55 +16,31 @@ const DEFAULT_CHAT_API_BASE = 'http://localhost:3100'
 const DEFAULT_CHAT_MCP_URL = 'http://localhost:3100/mcp'
 
 const TABS = [
-  { id: 'messaging', label: 'Webex Messaging MCP' },
   { id: 'contact-center', label: 'Webex Contact Center MCP' },
-  { id: 'chat', label: 'Chat (MCP client)' },
+  { id: 'chat', label: 'Chat' },
+  { id: 'docs', label: 'Documentation' },
 ]
 
-function buildMcpConfig({
-  serverName,
-  mcpUrl,
-  port,
-  mcpMode,
-  userEmail,
-  apiBaseUrl,
-  apiToken,
-  transport,
-}) {
-  const sanitizedName = (serverName || DEFAULT_SERVER_NAME).trim() || DEFAULT_SERVER_NAME
-  if (transport === 'stdio') {
-    return {
-      mcpServers: {
-        [sanitizedName]: {
-          command: 'node',
-          args: ['mcpServer.js', '--stdio'],
-          env: {
-            PORT: port || DEFAULT_PORT,
-            MCP_MODE: mcpMode || 'stdio',
-            WEBEX_USER_EMAIL: userEmail || '',
-            WEBEX_API_BASE_URL: apiBaseUrl || DEFAULT_API_BASE,
-            WEBEX_PUBLIC_WORKSPACE_API_KEY: apiToken || '',
-          },
-        },
-      },
-    }
-  }
-  const headers = {}
-  if (port) headers.PORT = port
-  if (mcpMode) headers.MCP_MODE = mcpMode
-  if (userEmail) headers.WEBEX_USER_EMAIL = userEmail
-  if (apiBaseUrl) headers.WEBEX_API_BASE_URL = apiBaseUrl
-  if (apiToken) headers.WEBEX_PUBLIC_WORKSPACE_API_KEY = apiToken
-
-  return {
-    mcpServers: {
-      [sanitizedName]: {
-        url: mcpUrl || DEFAULT_MCP_URL,
-        ...(Object.keys(headers).length > 0 && { headers }),
-      },
-    },
-  }
-}
+const MCP_TOOLS_DOCS = [
+  {
+    name: 'cc_list_address_books',
+    description: 'Lists address books for the organization. Calls Webex Contact Center API: GET organization/{orgId}/v3/address-book. Requires Organization ID (provide in Chat or in MCP arguments as __orgId, or set on server as CONTACT_CENTER_ORG_ID).',
+    howToUseFromChat: 'In the Chat tab, enter your Organization ID and Access token, then type a natural prompt such as: "What address books do you have?", "List all address books", or "Show me the address books for my org." The assistant will call this tool and return the list.',
+    examplePrompts: ['What address books do you have?', 'List all address books', 'Show me the address books for my org'],
+  },
+  {
+    name: 'cc_end_task',
+    description: 'Ends (clears) an interaction/task by task ID. Calls POST v1/tasks/{taskID}/end. You must provide the task ID. Uses the access token from the Chat tab or from MCP arguments (__accessToken), or server env.',
+    howToUseFromChat: 'In Chat, after your Org ID and token are set, ask to end a specific task by ID, for example: "End task abc-123-def", "Clear the interaction for task xyz-456", or "Close task 12345."',
+    examplePrompts: ['End task abc-123-def', 'Clear the interaction for task xyz-456', 'Close task 12345'],
+  },
+  {
+    name: 'cc_check_agent_outbound',
+    description: 'Checks if an agent is configured to place outbound calls. Uses org ID and token from Chat or MCP arguments. Internally: (1) GET user bulk-export to find the user and agent profile name, (2) GET agent-profile to read outdialEnabled.',
+    howToUseFromChat: 'In Chat, with Org ID and token set, ask about a specific agent by email, e.g.: "Can agent john@company.com place outbound calls?", "Is outbound enabled for jane@example.com?", or "Check if this agent has outdial: user@org.com."',
+    examplePrompts: ['Can agent john@company.com place outbound calls?', 'Is outbound enabled for jane@example.com?', 'Check if this agent has outdial: user@org.com'],
+  },
+]
 
 function buildCcMcpConfig(serverName, mcpUrl) {
   const name = (serverName || DEFAULT_CC_SERVER_NAME).trim() || DEFAULT_CC_SERVER_NAME
@@ -85,17 +54,7 @@ function buildCcMcpConfig(serverName, mcpUrl) {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState('messaging')
-  const [serverName, setServerName] = useState(DEFAULT_SERVER_NAME)
-  const [mcpUrl, setMcpUrl] = useState(DEFAULT_MCP_URL)
-  const [port, setPort] = useState(DEFAULT_PORT)
-  const [mcpMode, setMcpMode] = useState('http')
-  const [userEmail, setUserEmail] = useState('')
-  const [apiBaseUrl, setApiBaseUrl] = useState(DEFAULT_API_BASE)
-  const [apiToken, setApiToken] = useState('')
-  const [transport, setTransport] = useState('http')
-  const [copied, setCopied] = useState(false)
-
+  const [activeTab, setActiveTab] = useState('chat')
   const [ccServerName, setCcServerName] = useState(DEFAULT_CC_SERVER_NAME)
   const [ccMcpUrl, setCcMcpUrl] = useState(DEFAULT_CC_MCP_URL)
   const [ccCopied, setCcCopied] = useState(false)
@@ -111,28 +70,7 @@ function App() {
 
   const chatAuthReady = Boolean(chatAccessToken?.trim())
 
-  const config = buildMcpConfig({
-    serverName,
-    mcpUrl,
-    port,
-    mcpMode,
-    userEmail,
-    apiBaseUrl,
-    apiToken,
-    transport,
-  })
-
   const ccConfig = buildCcMcpConfig(ccServerName, ccMcpUrl)
-
-  const copyConfig = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(config, null, 2))
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      setCopied(false)
-    }
-  }, [config])
 
   const copyCcConfig = useCallback(async () => {
     try {
@@ -189,11 +127,21 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Webex MCP Config</h1>
-        <p className="subtitle">
-          Configure your MCP client (e.g. Cursor) to connect to Webex Messaging or Webex Contact Center MCP servers.
-          Paste the generated JSON into your client config.
-        </p>
+        <div className="header-left">
+          <h1>Webex Contact Center MCP</h1>
+          <p className="subtitle">
+            Connect MCP clients to Webex Contact Center and use tools from the Chat. Paste the generated JSON into your client config or chat with your Org ID and token.
+          </p>
+        </div>
+        <div className="header-right">
+          <button
+            type="button"
+            className="doc-link-btn"
+            onClick={() => setActiveTab('docs')}
+          >
+            Documentation
+          </button>
+        </div>
       </header>
 
       <nav className="tabs" role="tablist">
@@ -211,164 +159,50 @@ function App() {
         ))}
       </nav>
 
-      {activeTab === 'messaging' && (
-        <div className="layout">
-          <section className="panel config-panel">
-            <h2>Connection (Messaging)</h2>
-
-            <div className="field-group">
-              <label htmlFor="transport">Transport</label>
-              <select
-                id="transport"
-                value={transport}
-                onChange={(e) => setTransport(e.target.value)}
-                className="input"
-              >
-                <option value="http">HTTP (StreamableHTTP)</option>
-                <option value="stdio">STDIO (local process)</option>
-              </select>
-              <span className="hint">
-                Use HTTP when the Webex MCP server runs remotely (e.g. <code>npm run start:http</code>).
-              </span>
-            </div>
-
-            <div className="field-group">
-              <label htmlFor="serverName">Server name (config key)</label>
-              <input
-                id="serverName"
-                type="text"
-                value={serverName}
-                onChange={(e) => setServerName(e.target.value)}
-                placeholder={DEFAULT_SERVER_NAME}
-                className="input"
-              />
-            </div>
-
-            {transport === 'http' && (
-              <>
-                <div className="field-group">
-                  <label htmlFor="mcpUrl">MCP endpoint URL</label>
-                  <input
-                    id="mcpUrl"
-                    type="url"
-                    value={mcpUrl}
-                    onChange={(e) => setMcpUrl(e.target.value)}
-                    placeholder={DEFAULT_MCP_URL}
-                    className="input"
-                  />
-                  <span className="hint">e.g. http://localhost:3001/mcp or your deployed server URL.</span>
-                </div>
-                <div className="field-group">
-                  <label htmlFor="port">Port (for headers)</label>
-                  <input
-                    id="port"
-                    type="text"
-                    value={port}
-                    onChange={(e) => setPort(e.target.value)}
-                    placeholder={DEFAULT_PORT}
-                    className="input"
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="field-group">
-              <label htmlFor="mcpMode">MCP mode</label>
-              <select
-                id="mcpMode"
-                value={mcpMode}
-                onChange={(e) => setMcpMode(e.target.value)}
-                className="input"
-              >
-                {MCP_MODES.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="field-group">
-              <label htmlFor="userEmail">Webex user email</label>
-              <input
-                id="userEmail"
-                type="email"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                placeholder="you@company.com"
-                className="input"
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="field-group">
-              <label htmlFor="apiBaseUrl">Webex API base URL</label>
-              <input
-                id="apiBaseUrl"
-                type="url"
-                value={apiBaseUrl}
-                onChange={(e) => setApiBaseUrl(e.target.value)}
-                placeholder={DEFAULT_API_BASE}
-                className="input"
-              />
-            </div>
-
-            <div className="field-group">
-              <label htmlFor="apiToken">Webex API token</label>
-              <input
-                id="apiToken"
-                type="password"
-                value={apiToken}
-                onChange={(e) => setApiToken(e.target.value)}
-                placeholder="Paste token (no &quot;Bearer &quot; prefix)"
-                className="input"
-                autoComplete="off"
-              />
-              <span className="hint">
-                Get a token from{' '}
-                <a
-                  href="https://developer.webex.com/messaging/docs/api/v1/rooms/list-rooms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  developer.webex.com
-                </a>
-                . Do not include &quot;Bearer &quot;.
-              </span>
-            </div>
-          </section>
-
-          <section className="panel output-panel">
-            <h2>Generated config</h2>
-            <p className="hint">Add this to your MCP client config (e.g. Cursor MCP settings).</p>
-            <pre className="code-block">
-              <code>{JSON.stringify(config, null, 2)}</code>
-            </pre>
-            <button
-              type="button"
-              onClick={copyConfig}
-              className="copy-btn"
-              aria-pressed={copied}
-            >
-              {copied ? 'Copied' : 'Copy JSON'}
-            </button>
-          </section>
-        </div>
-      )}
-
       {activeTab === 'contact-center' && (
         <div className="layout">
           <section className="panel config-panel">
-            <h2>Webex Contact Center MCP</h2>
+            <h2>How third parties can configure and use this MCP</h2>
             <p className="intro">
-              This MCP server exposes{' '}
-              <a
-                href="https://developer.webex.com/webex-contact-center/docs/webex-contact-center"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              This server exposes{' '}
+              <a href="https://developer.webex.com/webex-contact-center/docs/webex-contact-center" target="_blank" rel="noopener noreferrer">
                 Webex Contact Center APIs
               </a>
-              {' '}(REST, GraphQL, agents, tasks, webhooks, etc.) as MCP tools. Run the server in this repo&apos;s <code>server/</code> folder with <code>node index.js --http</code> and set <code>CONTACT_CENTER_ACCESS_TOKEN</code> (or <code>WEBEX_CC_ACCESS_TOKEN</code>) in the server environment.
+              {' '}as MCP tools. Third parties can connect <strong>Cursor</strong>, <strong>Claude Desktop</strong>, or any MCP client, or use the <strong>Chat</strong> tab on this page with their own Org ID and token.
             </p>
+
+            <h3>1. What you need</h3>
+            <ul className="doc-list">
+              <li><strong>MCP endpoint URL</strong> — This server’s URL plus <code>/mcp</code> (e.g. <code>https://your-domain.awsapprunner.com/mcp</code>). When opened from this site, the field below defaults to the current origin.</li>
+              <li><strong>Server name</strong> — Optional; the key used in your MCP client config (e.g. <code>webex-contact-center</code>).</li>
+            </ul>
+
+            <h3>2. Sending Organization ID and token</h3>
+            <p><strong>Option A — Chat on this page</strong></p>
+            <ul className="doc-list">
+              <li>Use the <strong>Chat</strong> tab. Enter your <strong>Organization ID</strong> and <strong>Access token</strong> in the form.</li>
+              <li>Each message is sent to <code>POST /api/chat</code> with JSON body: <code>{'{"prompt":"...","accessToken":"...","orgId":"..."}'}</code>. The server uses <code>accessToken</code> and <code>orgId</code> for Webex Contact Center API calls. Tokens are not stored.</li>
+            </ul>
+            <p><strong>Option B — Direct MCP (e.g. Cursor, Claude Desktop)</strong></p>
+            <ul className="doc-list">
+              <li>Add this server to your client config (paste the <strong>Generated config</strong> from the right panel). The config only contains the MCP URL; it does not include credentials.</li>
+              <li>To pass <strong>Org ID and token per request</strong>, include them in the MCP <code>tools/call</code> arguments. The server accepts two reserved keys in <code>arguments</code>:
+                <ul>
+                  <li><code>__accessToken</code> — Webex Contact Center API access token (string)</li>
+                  <li><code>__orgId</code> — Organization ID (string)</li>
+                </ul>
+                Example JSON-RPC request body for <code>tools/call</code>: <code>{'{"method":"tools/call","params":{"name":"cc_list_address_books","arguments":{"__accessToken":"YOUR_TOKEN","__orgId":"YOUR_ORG_ID"}}}'}</code>. The server strips these from the tool arguments and uses them for authentication.
+              </li>
+              <li>Alternatively, the server can use a single token/org set by the administrator in the environment (<code>CONTACT_CENTER_ACCESS_TOKEN</code>, <code>CONTACT_CENTER_ORG_ID</code>). Then clients do not need to send <code>__accessToken</code> or <code>__orgId</code> in each call.</li>
+            </ul>
+
+            <h3>3. Steps to add to your MCP client</h3>
+            <ol className="doc-list">
+              <li>Set <strong>MCP endpoint URL</strong> below to this server’s URL (e.g. <code>https://your-app.awsapprunner.com/mcp</code>).</li>
+              <li>Optionally change the <strong>Server name</strong>.</li>
+              <li>Click <strong>Copy JSON</strong> and paste into your MCP client configuration (e.g. Cursor → Settings → MCP → config JSON).</li>
+              <li>Save and restart the client. When calling tools, pass <code>__accessToken</code> and <code>__orgId</code> in the request arguments if the server does not use env-based credentials.</li>
+            </ol>
 
             <div className="field-group">
               <label htmlFor="ccServerName">Server name (config key)</label>
@@ -392,13 +226,13 @@ function App() {
                 placeholder={DEFAULT_CC_MCP_URL}
                 className="input"
               />
-              <span className="hint">Default: http://localhost:3100/mcp when running <code>node index.js --http</code> in <code>server/</code>.</span>
+              <span className="hint">This server’s URL + <code>/mcp</code>. When opened from the deployed site, it defaults to the current origin.</span>
             </div>
           </section>
 
           <section className="panel output-panel">
             <h2>Generated config</h2>
-            <p className="hint">Add this to your MCP client config. Token is configured on the server (env), not in this JSON.</p>
+            <p className="hint">Paste this into your MCP client config file. The server handles authentication via its environment (or use the Chat tab for your own token).</p>
             <pre className="code-block">
               <code>{JSON.stringify(ccConfig, null, 2)}</code>
             </pre>
@@ -414,12 +248,37 @@ function App() {
         </div>
       )}
 
+      {activeTab === 'docs' && (
+        <div className="layout">
+          <section className="panel config-panel" style={{ maxWidth: '100%' }}>
+            <h2>Documentation — MCP tools and how to use them from Chat</h2>
+            <p className="intro">
+              This server exposes the following MCP tools. Use the <strong>Chat</strong> tab (with your Org ID and Access token) or an MCP client configured with this server. Below: what each tool does and <strong>how to use it from the Chat</strong>.
+            </p>
+            {MCP_TOOLS_DOCS.map((tool) => (
+              <div key={tool.name} className="doc-tool-block">
+                <h3><code>{tool.name}</code></h3>
+                <p>{tool.description}</p>
+                <p><strong>How to use from Chat:</strong></p>
+                <p>{tool.howToUseFromChat}</p>
+                <p><strong>Example prompts:</strong></p>
+                <ul>
+                  {tool.examplePrompts.map((prompt, i) => (
+                    <li key={i}><code>{prompt}</code></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        </div>
+      )}
+
       {activeTab === 'chat' && (
         <div className="chat-layout">
           <section className="panel chat-panel">
             <h2>Chat (MCP client)</h2>
             <p className="intro">
-              Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Use <strong>Chat API base URL</strong> and <strong>MCP server URL</strong> below to point to a local server or a deployed one (e.g. App Runner). The server must have <code>CLAUDE_API_KEY</code> or <code>OPENAI_API_KEY</code> set.
+              Set your <strong>Organization ID</strong> and <strong>Access token</strong> below to start chatting. The app uses them for Webex Contact Center API calls. Use <strong>Chat API base URL</strong> and <strong>MCP server URL</strong> below to point to a local server or a deployed one (e.g. App Runner). The server must have <code>CLAUDE_API_KEY</code> or <code>OPENAI_API_KEY</code> set in its environment (e.g. App Runner) so everyone can use the Chat; keys are never stored in code.
             </p>
             <div className="chat-auth">
               <div className="field-group">
@@ -522,15 +381,11 @@ function App() {
 
       <footer className="footer">
         <p>
-          Webex Messaging:{' '}
-          <a href="https://github.com/webex/webex-messaging-mcp-server" target="_blank" rel="noopener noreferrer">
-            webex-messaging-mcp-server
-          </a>
-          . Webex Contact Center:{' '}
+          Webex Contact Center:{' '}
           <a href="https://developer.webex.com/webex-contact-center/docs/webex-contact-center" target="_blank" rel="noopener noreferrer">
             API docs
           </a>
-          . Tokens are not stored in this app; they exist only in the page state and in the copied config.
+          . Tokens are not stored; they exist only in the page and in the copied config.
         </p>
       </footer>
     </div>

@@ -53,12 +53,26 @@ The **Chat (MCP client)** tab is the UI where users can:
 - Send prompts; the app calls your deployed backend (`/api/chat`), which uses the MCP server and returns the reply.
 
 **Backend requirements (already on App Runner):**  
-Set at least one LLM key so the chat can answer:
+So that everyone using the Chat can get replies, set **one** LLM API key on the backend. **Never put API keys in source code.**
 
 - **Claude:** `CLAUDE_API_KEY` or `ANTHROPIC_API_KEY`
 - **OpenAI:** `OPENAI_API_KEY`
 
-Add these in App Runner under **Configuration** → **Environment variables** (and optionally Secrets).
+**Option 1 – Config file + AWS Secrets Manager (recommended when using apprunner.yaml)**  
+The repo’s `apprunner.yaml` already has a `secrets` entry for `CLAUDE_API_KEY` that reads the value from AWS Secrets Manager:
+
+1. **Create the secret in AWS:**  
+   AWS Console → **Secrets Manager** → **Store a new secret** → **Other type of secret** → Plaintext tab, paste your Claude API key → Next → Secret name e.g. `CLAUDE_API_KEY` → Store.
+2. **Copy the secret ARN** from the secret’s details (e.g. `arn:aws:secretsmanager:us-east-1:320305881665:secret:CLAUDE_API_KEY-AbCdEf`).
+3. **Update apprunner.yaml:**  
+   In `server/apprunner.yaml` (or root `apprunner.yaml` if you use source directory `/`), replace the placeholder in `secrets`:
+   - Change `value-from` to your secret’s full ARN (replace `REPLACE_WITH_ACCOUNT_ID` and `CLAUDE_API_KEY-xxxxxx` with your ARN’s account ID and secret name/suffix).
+4. **Grant App Runner access:**  
+   App Runner’s **instance role** must be allowed to read the secret. In IAM, attach a policy that allows `secretsmanager:GetSecretValue` on that secret’s ARN (or use the policy template suggested in the App Runner console when you add secrets).
+5. **Deploy:** Push the apprunner.yaml change and trigger a new deployment.
+
+**Option 2 – Console only**  
+If you don’t use Secrets Manager, remove the `secrets` block from `apprunner.yaml` and set `CLAUDE_API_KEY` in App Runner → **Configuration** → **Configure service** → **Edit** → **Environment variables - optional** (add as plain text). Redeploy.
 
 **How to use the Chat app today (frontend runs on your machine):**
 
