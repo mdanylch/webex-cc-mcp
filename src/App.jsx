@@ -34,8 +34,8 @@ const MCP_TOOLS_DOCS = [
   {
     name: 'cc_end_task',
     description: 'Ends (clears) an interaction/task by task ID. Calls POST v1/tasks/{taskID}/end. You must provide the task ID. Uses the access token from the Chat tab or from MCP arguments (__accessToken), or server env.',
-    howToUseFromChat: 'In Chat, after your Org ID and token are set, ask to end a specific task by ID, for example: "End task abc-123-def", "Clear the interaction for task xyz-456", or "Close task 12345."',
-    examplePrompts: ['End task abc-123-def', 'Clear the interaction for task xyz-456', 'Close task 12345'],
+    howToUseFromChat: 'In Chat, after your Org ID and token are set, ask to end a specific task by ID, for example: "End task 97d4ad13-c8fa-4ec7-a035-ec691682caa4" or "Clear the interaction for task 97d4ad13-c8fa-4ec7-a035-ec691682caa4."',
+    examplePrompts: ['End task 97d4ad13-c8fa-4ec7-a035-ec691682caa4', 'Clear the interaction for task 97d4ad13-c8fa-4ec7-a035-ec691682caa4', 'Close task 97d4ad13-c8fa-4ec7-a035-ec691682caa4'],
   },
   {
     name: 'cc_check_agent_outbound',
