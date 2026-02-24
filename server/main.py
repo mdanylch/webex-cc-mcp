@@ -59,7 +59,8 @@ TOOLS = [
 ]
 
 
-def strip_auth_overrides(args: dict | None) -> tuple[dict, dict]:
+# Hint for MCP clients when org/token are missing (returned in tool error payloads)
+_MCP_AUTH_HINT = " For MCP clients: include __orgId and __accessToken in the tools/call arguments. See the Webex Contact Center MCP page for details."
     if not args or not isinstance(args, dict):
         return {}, {}
     args = dict(args)
@@ -220,7 +221,7 @@ async def handle_tool_call(name: str, args: dict | None) -> dict:
         org_id = overrides.get("orgId") or get_org_id()
         if not org_id:
             return {
-                "content": [{"type": "text", "text": '{"ok":false,"error":"Organization ID is required. Set it in the Chat tab (Organization ID field) or in server .env as CONTACT_CENTER_ORG_ID."}'}],
+                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Organization ID is required. Set it in the Chat tab (Organization ID field) or in server .env as CONTACT_CENTER_ORG_ID." + _MCP_AUTH_HINT})}],
                 "isError": True,
             }
         path = f"organization/{org_id}/v3/address-book"
@@ -235,7 +236,7 @@ async def handle_tool_call(name: str, args: dict | None) -> dict:
             }
         if not overrides.get("token") and not get_access_token():
             return {
-                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Access token is required. Set it in the Chat tab."})}],
+                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Access token is required. Set it in the Chat tab or pass __accessToken in tools/call arguments." + _MCP_AUTH_HINT})}],
                 "isError": True,
             }
         path = f"v1/tasks/{task_id}/end"
@@ -251,12 +252,12 @@ async def handle_tool_call(name: str, args: dict | None) -> dict:
         org_id = overrides.get("orgId") or get_org_id()
         if not org_id:
             return {
-                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Organization ID is required. Set it in the Chat tab or in server .env as CONTACT_CENTER_ORG_ID."})}],
+                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Organization ID is required. Set it in the Chat tab or in server .env as CONTACT_CENTER_ORG_ID." + _MCP_AUTH_HINT})}],
                 "isError": True,
             }
         if not overrides.get("token") and not get_access_token():
             return {
-                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Access token is required. Set it in the Chat tab."})}],
+                "content": [{"type": "text", "text": json.dumps({"ok": False, "error": "Access token is required. Set it in the Chat tab or pass __accessToken in tools/call arguments." + _MCP_AUTH_HINT})}],
                 "isError": True,
             }
         result = _check_agent_outbound(user_email, org_id, overrides)
@@ -318,6 +319,7 @@ def chrome_devtools():
 
 
 @app.get("/mcp")
+@app.get("/mcp/")
 def mcp_get():
     return JSONResponse(
         status_code=405,
@@ -329,6 +331,7 @@ def mcp_get():
 
 
 @app.post("/mcp")
+@app.post("/mcp/")
 async def mcp_post(request: Request):
     try:
         body = await request.json()
